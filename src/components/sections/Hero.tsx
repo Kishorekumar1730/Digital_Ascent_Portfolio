@@ -1,6 +1,7 @@
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo.png';
+import logoAnimated from '@/assets/logo-animated.png';
 import heroBg from '@/assets/hero-bg.jpg';
 
 const Hero = () => {
@@ -10,6 +11,16 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Animated Logo Background */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-10">
+        <img
+          src={logoAnimated}
+          alt=""
+          className="w-[80%] h-[80%] object-contain animate-[spin_60s_linear_infinite]"
+          style={{ animationDirection: 'reverse' }}
+        />
+      </div>
+      
       {/* Background Image Overlay */}
       <div 
         className="absolute inset-0 opacity-20"
