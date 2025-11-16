@@ -1,70 +1,109 @@
-import { ArrowRight, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import logo from '@/assets/logo.png';
-import logoAnimated from '@/assets/logo-animated.png';
-import heroBg from '@/assets/hero-bg.jpg';
+"use client";
+
+import { useEffect, useState } from "react";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import heroVideo from "@/assets/logo-animated.mp4"; // 🎥 Background video
+import SectionWith3D from "@/components/SectionWith3D";
+import CardGrid from "../CardGrid";
+
+type Stat = { id: number; value: string; label: string };
 
 const Hero = () => {
+  const [stats, setStats] = useState<Stat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 🎯 Scroll to Section
   const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // 🚀 Fetch Stats from Supabase
+  const fetchStats = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("hero_stats")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching hero stats:", error);
+    } else {
+      setStats(data || []);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchStats();
+
+    // 🧩 Optional realtime updates
+    const subscription = supabase
+      .channel("public:hero_stats")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "hero_stats" },
+        () => {
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Animated Logo Background */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-10">
-        <img
-          src={logoAnimated}
-          alt=""
-          className="w-[80%] h-[80%] object-contain animate-[spin_60s_linear_infinite]"
-          style={{ animationDirection: 'reverse' }}
-        />
-      </div>
-      
-      {/* Background Image Overlay */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `url(${heroBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-      
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+      {/* 🎥 Animated Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover opacity-60"
+      >
+        <source src={heroVideo} type="video/mp4" />
+      </video>
 
-      <div className="container mx-auto px-4 relative z-10 text-center">
-        {/* Logo Animation */}
-        <div className="mb-8 flex justify-center animate-float">
-          <div className="relative">
-            <img
-              src={logo}
-              alt="Digital Ascent"
-              className="h-32 w-32 md:h-48 md:w-48 animate-glow"
-            />
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-          </div>
-        </div>
+      {/* ✨ Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/90 backdrop-blur-[2px]" />
 
-        {/* Main Heading */}
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 animate-fade-in">
-          Elevate Your
-          <span className="block text-gradient mt-2">Digital Presence</span>
-        </h1>
+      {/* 🌌 Main Content */}
+      <div className="container mx-auto px-6 md:px-12 relative z-10 text-center flex flex-col items-center justify-center min-h-screen">
+        {/* Heading */}
+        <CardGrid className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white leading-tight mb-6 drop-shadow-lg">
+          Elevate Your{" "}
+          <span className="text-gradient-to-r from-orange-400 to-yellow-400">
+            Digital Presence
+          </span>
+        </CardGrid>
 
-        {/* Subheading */}
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 animate-fade-in">
-          Transform your vision into reality with cutting-edge web solutions, 
-          stunning design, and strategic digital innovation.
-        </p>
+        {/* Subtitle */}
+        <motion.div
+          initial={{ opacity: 0, y: 1 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed"
+        >
+          Transform your vision into reality with cutting-edge design, scalable
+          web solutions, and strategic digital innovation.
+        </motion.div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in">
+        {/* Buttons */}
+        <SectionWith3D
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.8 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+        >
           <Button
             size="lg"
-            onClick={() => scrollToSection('contact')}
-            className="group bg-primary hover:bg-primary/90 text-primary-foreground font-heading text-lg px-8 py-6 glow-border"
+            onClick={() => scrollToSection("contact")}
+            className="group bg-gradient-to-r from-orange-500 to-yellow-400 hover:from-orange-400 hover:to-yellow-300 text-black font-semibold px-8 py-6 text-lg shadow-[0_0_30px_rgba(255,165,0,0.25)] transition-all"
           >
             <Sparkles className="mr-2 h-5 w-5" />
             Get Started
@@ -73,36 +112,46 @@ const Hero = () => {
           <Button
             size="lg"
             variant="outline"
-            onClick={() => scrollToSection('portfolio')}
-            className="glass-hover font-heading text-lg px-8 py-6 border-primary/50"
+            onClick={() => scrollToSection("testimonials")}
+            className="glass-hover text-white font-semibold px-8 py-6 text-lg border-white/20 hover:border-orange-400/60 hover:text-orange-300 transition-all"
           >
             View Our Work
           </Button>
-        </div>
+        </SectionWith3D>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 max-w-4xl mx-auto">
-          {[
-            { value: '500+', label: 'Projects Delivered' },
-            { value: '98%', label: 'Client Satisfaction' },
-            { value: '50+', label: 'Industry Awards' },
-            { value: '24/7', label: 'Support Available' },
-          ].map((stat, index) => (
-            <div key={index} className="glass rounded-lg p-6 text-center animate-fade-in hover:scale-105 transition-transform">
-              <div className="text-3xl md:text-4xl font-heading font-bold text-gradient mb-2">
-                {stat.value}
+        <motion.div
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 max-w-4xl mx-auto"
+        >
+          {loading ? (
+            <CardGrid>
+              <div className="text-center text-lg py-16 animate-pulse text-gray-400">
+                Loading timeline...
               </div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
+            </CardGrid>
+          ) : stats.length === 0 ? (
+            <div className="col-span-3 text-center text-muted-foreground">
+              No stats available yet
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-primary/50 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-primary rounded-full mt-2 animate-pulse" />
-        </div>
+          ) : (
+            stats.map((stat) => (
+              <motion.div
+                key={stat.id}
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 200, damping: 12 }}
+                className="glass rounded-2xl p-6 text-center backdrop-blur-md shadow-[0_10px_40px_rgba(0,0,0,0.4)] border border-white/10"
+              >
+                <div className="text-3xl md:text-4xl font-heading font-bold text-gradient mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-gray-400">{stat.label}</div>
+              </motion.div>
+            ))
+          )}
+        </motion.div>
       </div>
     </section>
   );

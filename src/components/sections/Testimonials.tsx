@@ -1,96 +1,162 @@
-import { Star, Quote } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+"use client";
 
-const Testimonials = () => {
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'CEO, TechVision Inc.',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop',
-      content: 'Digital Ascent transformed our online presence completely. Their team\'s expertise and dedication resulted in a 300% increase in conversions.',
-      rating: 5,
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Founder, StartupHub',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
-      content: 'Working with Digital Ascent was a game-changer. They understood our vision and delivered beyond expectations with incredible attention to detail.',
-      rating: 5,
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'Marketing Director, Global Brands',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop',
-      content: 'The level of professionalism and creativity is unmatched. Our new website has received countless compliments from clients and partners.',
-      rating: 5,
-    },
-    {
-      name: 'David Park',
-      role: 'CTO, FinanceFlow',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop',
-      content: 'Digital Ascent\'s technical expertise and strategic approach helped us scale our platform seamlessly. Highly recommended!',
-      rating: 5,
-    },
-    {
-      name: 'Lisa Thompson',
-      role: 'Owner, Boutique Retail',
-      image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop',
-      content: 'From concept to launch, every step was smooth and professional. Our e-commerce site is now our biggest revenue driver.',
-      rating: 5,
-    },
-    {
-      name: 'James Wilson',
-      role: 'VP Product, InnovateCorp',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop',
-      content: 'The team at Digital Ascent doesn\'t just build websites, they build experiences. Our user engagement has skyrocketed.',
-      rating: 5,
-    },
-  ];
+import React, { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import { ExternalLink } from "lucide-react";
+import SectionWith3D from "../SectionWith3D";
+import CardGrid from "../CardGrid";
+
+type Testimonial = {
+  id: string;
+  company: string;
+  client: string;
+  description: string;
+  link?: string | null;
+  image_url?: string | null;
+};
+
+const TABLE = "clients";
+
+const Testimonials: React.FC = () => {
+  const [items, setItems] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTestimonials = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .order("id", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching testimonials:", error);
+      setItems([]);
+    } else if (data) {
+      setItems(
+        data.map((row: any) => ({
+          id: row.id,
+          company: row.company_name,
+          client: row.name,
+          description: row.description || "",
+          link: row.website_url,
+          image_url: row.logo_url,
+        }))
+      );
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchTestimonials();
+
+    // Optional realtime updates
+    const subscription = supabase
+      .channel("public:clients")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: TABLE },
+        () => fetchTestimonials()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
 
   return (
-    <section className="py-20 md:py-32 relative overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-heading font-bold mb-4">
-            Client <span className="text-gradient">Testimonials</span>
+    <section
+      id="testimonials"
+      className="relative py-24 md:py-36 overflow-hidden bg-black text-white"
+    >
+      {/* Background layers */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,140,0,0.08),transparent_70%)] animate-pulse-slow pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-black/80 backdrop-blur-3xl pointer-events-none" />
+
+      <div className="container mx-auto px-6 relative z-10">
+        {/* Section Heading */}
+        <CardGrid className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-heading font-bold mb-3">
+            Client{" "}
+            <span className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+              Delivers
+            </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Don't just take our word for it - hear what our clients have to say
+          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+            Hear from brands and leaders who’ve transformed their digital
+            journey with us.
           </p>
-        </div>
+        </CardGrid>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {testimonials.map((testimonial, index) => (
-            <Card
-              key={index}
-              className="glass-hover rounded-xl p-6 relative group hover:-translate-y-2 transition-all duration-300"
-            >
-              <Quote className="absolute top-6 right-6 h-12 w-12 text-primary/10 group-hover:text-primary/20 transition-colors" />
-              
-              <div className="flex items-center mb-4">
-                <img
-                  src={testimonial.image}
-                  alt={testimonial.name}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-primary/50"
-                />
-                <div className="ml-4">
-                  <h4 className="font-heading font-bold">{testimonial.name}</h4>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                </div>
-              </div>
+        {/* Testimonials List */}
+        {loading ? (
+          <div className="text-center text-lg py-16 animate-pulse text-gray-400">
+            Loading testimonials...
+          </div>
+        ) : items.length === 0 ? (
+          <div className="text-center text-muted-foreground">
+            No testimonials available yet.
+          </div>
+        ) : (
+          <CardGrid className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {items.map((item, i) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+              >
+                <SectionWith3D
+                  whileHover={{ rotateX: 4, rotateY: -3, scale: 1.04 }}
+                  transition={{ type: "spring", stiffness: 180, damping: 15 }}
+                  className="relative glass-hover rounded-3xl p-8 md:p-10 backdrop-blur-xl border border-orange-400/10 shadow-[0_10px_60px_rgba(255,140,0,0.1)] h-full flex flex-col justify-between"
+                >
+                  {/* Logo or Client Avatar */}
+                  <div className="flex justify-center mb-6">
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.client}
+                        className="w-24 h-24 rounded-full object-cover ring-2 ring-orange-400/30 shadow-[0_0_40px_rgba(255,140,0,0.2)]"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full flex items-center justify-center bg-orange-500/10 text-orange-400 text-3xl font-bold">
+                        {item.client[0]}
+                      </div>
+                    )}
+                  </div>
 
-              <div className="flex mb-4">
-                {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 text-primary fill-primary" />
-                ))}
-              </div>
+                  {/* Testimonial Content */}
+                  <blockquote className="text-gray-300 text-base leading-relaxed mb-6 italic">
+                    “{item.description}”
+                  </blockquote>
 
-              <p className="text-muted-foreground relative z-10">
-                "{testimonial.content}"
-              </p>
-            </Card>
-          ))}
-        </div>
+                  {/* Client Info */}
+                  <div className="text-center">
+                    <h4 className="text-xl font-semibold text-orange-400">
+                      {item.client}
+                    </h4>
+                    <p className="text-gray-400 text-sm mb-3">{item.company}</p>
+
+                    {item.link && (
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm text-orange-300 hover:text-orange-200 transition-colors"
+                      >
+                        Visit Website <ExternalLink size={14} />
+                      </a>
+                    )}
+                  </div>
+                </SectionWith3D>
+              </motion.div>
+            ))}
+          </CardGrid>
+        )}
       </div>
     </section>
   );

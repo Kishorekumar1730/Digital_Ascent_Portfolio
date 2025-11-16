@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import logo from '@/assets/logo.png';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Menu, X, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
 
 const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,31 +12,31 @@ const Navigation = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
       setIsMobileMenuOpen(false);
     }
   };
 
   const navLinks = [
-    { name: 'About', id: 'about' },
-    { name: 'Services', id: 'services' },
-    { name: 'Portfolio', id: 'portfolio' },
-    { name: 'Process', id: 'process' },
-    { name: 'Pricing', id: 'pricing' },
-    { name: 'Contact', id: 'contact' },
+    { name: "About", id: "about" },
+    { name: "Services", id: "services" },
+    { name: "Portfolio", id: "portfolio" },
+    { name: "Process", id: "process" },
+    { name: "Pricing", id: "pricing" },
+    { name: "Contact", id: "contact" },
   ];
 
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'glass py-4' : 'py-6'
+        isScrolled ? "glass py-4" : "py-6"
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
@@ -46,9 +46,12 @@ const Navigation = () => {
             alt="Digital Ascent Logo"
             className="h-12 w-12 transition-transform duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(255,119,53,0.5)]"
           />
-          <span className="text-2xl font-heading font-bold text-gradient">
-            Digital Ascent
-          </span>
+          <h2 className="text-2xl md font-heading font-bold">
+            Digital{" "}
+            <span className="text-2xl font-heading font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+              Ascent
+            </span>
+          </h2>
         </Link>
 
         {/* Desktop Navigation */}
@@ -63,8 +66,11 @@ const Navigation = () => {
             </button>
           ))}
           <Link to="/admin">
-            <Button variant="outline" className="glass-hover border-primary/50 hover:border-primary">
-              Admin
+            <Button
+              variant="outline"
+              className="glass-hover border-primary/50 hover:border-primary rounded-full p-3"
+            >
+              <Shield className="h-5 w-5 text-gradient-to-r from-orange-400 to-yellow-400" />
             </Button>
           </Link>
         </div>
