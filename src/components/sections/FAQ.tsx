@@ -70,7 +70,7 @@ const FAQ: React.FC = () => {
       transition: {
         duration: 0.45,
         delay: i * 0.04,
-        ease: [0.2, 0.8, 0.2, 1] as any,
+        ease: [0.2, 0.8, 0.2, 1] as const,
       },
     }),
   };
@@ -79,12 +79,12 @@ const FAQ: React.FC = () => {
     collapsed: {
       height: 0,
       opacity: 0,
-      transition: { duration: 0.32, ease: [0.2, 0.9, 0.3, 1] as any },
+      transition: { duration: 0.32, ease: [0.2, 0.9, 0.3, 1] as const },
     },
     expanded: {
       height: "auto",
       opacity: 1,
-      transition: { duration: 0.42, ease: [0.2, 0.9, 0.3, 1] as any },
+      transition: { duration: 0.42, ease: [0.2, 0.9, 0.3, 1] as const },
     },
   };
 
@@ -126,109 +126,174 @@ const FAQ: React.FC = () => {
 
         {/* FAQ list */}
         <div className="w-full max-w-3xl flex flex-col gap-4">
-          {faqs.map((faq, i) => {
-            const isOpen = openIndex === i;
+          
+          {/* DESKTOP VIEW - Unchanged */}
+          <div className="hidden md:flex flex-col gap-4">
+            {faqs.map((faq, i) => {
+              const isOpen = openIndex === i;
 
-            return (
-              <motion.div
-                key={i}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={cardVariants}
-                className="relative"
-              >
-                <CardGrid
-                  // Card base styling (glassmorphism + subtle border highlight when open)
-                  className={`p-6 md:p-8 rounded-2xl cursor-pointer transition-all transform ${
-                    isOpen
-                      ? "scale-102 ring-1 ring-orange-500/30 border border-orange-400/6"
-                      : "border border-white/6"
-                  } bg-black/60 backdrop-blur-xl shadow-[0_8px_40px_rgba(255,140,0,0.04)]`}
-                  onClick={() => toggle(i)}
-                  role="button"
-                  aria-expanded={isOpen}
-                  aria-controls={`faq-answer-${i}`}
+              return (
+                <motion.div
+                  key={i}
+                  custom={i}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={cardVariants}
+                  className="relative"
                 >
-                  <div className="flex items-start md:items-center justify-between gap-6">
-                    <div className="flex-1 min-w-0">
-                      <h3
-                        className={"text-lg md:text-xl font-semibold mb-2 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent"}
+                  <CardGrid
+                    // Card base styling (glassmorphism + subtle border highlight when open)
+                    className={`p-6 md:p-8 rounded-2xl cursor-pointer transition-all transform ${
+                      isOpen
+                        ? "scale-102 ring-1 ring-orange-500/30 border border-orange-400/6"
+                        : "border border-white/6"
+                    } bg-black/60 backdrop-blur-xl shadow-[0_8px_40px_rgba(255,140,0,0.04)]`}
+                    onClick={() => toggle(i)}
+                    role="button"
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-answer-${i}`}
+                  >
+                    <div className="flex items-start md:items-center justify-between gap-6">
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className={"text-lg md:text-xl font-semibold mb-2 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent"}
+                        >
+                          {faq.question}
+                        </h3>
+                        {/* short preview only when closed to hint content */}
+                        {!isOpen && (
+                          <p className="text-sm text-gray-400 truncate">
+                            {faq.answer.length > 140
+                              ? faq.answer.slice(0, 140) + "…"
+                              : faq.answer}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* chevron / indicator */}
+                      <div
+                        className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                          isOpen ? "bg-white/8" : "bg-white/6"
+                        }`}
+                        aria-hidden
                       >
+                        <motion.span
+                          animate={{
+                            rotate: isOpen ? 180 : 0,
+                            scale: isOpen ? 1.06 : 1,
+                          }}
+                          transition={{
+                            duration: 0.35,
+                            ease: [0.2, 0.85, 0.25, 1],
+                          }}
+                          className="text-orange-200 font-semibold"
+                        >
+                          ▼
+                        </motion.span>
+                      </div>
+                    </div>
+
+                    {/* Answer area (animated height) */}
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          id={`faq-answer-${i}`}
+                          key="content"
+                          initial="collapsed"
+                          animate="expanded"
+                          exit="collapsed"
+                          variants={answerVariants}
+                          className="mt-4 overflow-hidden text-gray-300 text-sm md:text-base leading-relaxed"
+                        >
+                          <div className="pt-1 pb-1">{faq.answer}</div>
+
+                          {/* helpful micro-UI under answer */}
+                          <div className="mt-4 flex items-center justify-between gap-3">
+                            <div className="text-xs text-gray-400">
+                              Still have questions?
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                document
+                                  .getElementById("contact")
+                                  ?.scrollIntoView({ behavior: "smooth" });
+                              }}
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-semibold text-sm"
+                            >
+                              Contact Us
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardGrid>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* MOBILE VIEW - Clean, Compact, Professional */}
+          <div className="md:hidden flex flex-col gap-3">
+            {faqs.map((faq, i) => {
+              const isOpen = openIndex === i;
+
+              return (
+                <motion.div
+                  key={i}
+                  custom={i}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={cardVariants}
+                >
+                  <div
+                    className={`relative rounded-xl border transition-all duration-300 overflow-hidden ${
+                      isOpen
+                        ? "bg-zinc-900/80 border-orange-500/30 shadow-lg"
+                        : "bg-black/40 border-white/5"
+                    }`}
+                  >
+                    <button
+                      onClick={() => toggle(i)}
+                      className="w-full flex items-center justify-between p-4 text-left"
+                    >
+                      <h3 className={`text-sm font-bold pr-4 leading-tight ${isOpen ? "text-orange-400" : "text-gray-200"}`}>
                         {faq.question}
                       </h3>
-                      {/* short preview only when closed to hint content */}
-                      {!isOpen && (
-                        <p className="text-sm text-gray-400 truncate">
-                          {faq.answer.length > 140
-                            ? faq.answer.slice(0, 140) + "…"
-                            : faq.answer}
-                        </p>
-                      )}
-                    </div>
+                      
+                      <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center border transition-all ${isOpen ? "bg-orange-500/20 border-orange-500/50 text-orange-400 rotate-180" : "bg-white/5 border-white/10 text-gray-500"}`}>
+                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </button>
 
-                    {/* chevron / indicator */}
-                    <div
-                      className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
-                        isOpen ? "bg-white/8" : "bg-white/6"
-                      }`}
-                      aria-hidden
-                    >
-                      <motion.span
-                        animate={{
-                          rotate: isOpen ? 180 : 0,
-                          scale: isOpen ? 1.06 : 1,
-                        }}
-                        transition={{
-                          duration: 0.35,
-                          ease: [0.2, 0.85, 0.25, 1],
-                        }}
-                        className="text-orange-200 font-semibold"
-                      >
-                        ▼
-                      </motion.span>
-                    </div>
-                  </div>
-
-                  {/* Answer area (animated height) */}
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        id={`faq-answer-${i}`}
-                        key="content"
-                        initial="collapsed"
-                        animate="expanded"
-                        exit="collapsed"
-                        variants={answerVariants}
-                        className="mt-4 overflow-hidden text-gray-300 text-sm md:text-base leading-relaxed"
-                      >
-                        <div className="pt-1 pb-1">{faq.answer}</div>
-
-                        {/* helpful micro-UI under answer */}
-                        <div className="mt-4 flex items-center justify-between gap-3">
-                          <div className="text-xs text-gray-400">
-                            Still have questions?
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-4 pt-0">
+                            <div className="h-px w-full bg-gradient-to-r from-transparent via-orange-500/20 to-transparent mb-3" />
+                            <p className="text-xs text-gray-400 leading-relaxed">
+                              {faq.answer}
+                            </p>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              document
-                                .getElementById("contact")
-                                ?.scrollIntoView({ behavior: "smooth" });
-                            }}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-semibold text-sm"
-                          >
-                            Contact Us
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </CardGrid>
-              </motion.div>
-            );
-          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
         </div>
 
         {/* CTA */}

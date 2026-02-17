@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+
 
 type Partnership = {
   id?: number;
@@ -13,130 +19,275 @@ type Partnership = {
   logo_url?: string;
 };
 
+const AUTOPLAY_MS = 3000;
+
 const Partnerships = () => {
   const [partnerships, setPartnerships] = useState<Partnership[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const isHovering = useRef(false);
+
   useEffect(() => {
-    const fetchPartnerships = async () => {
-      const { data, error } = await supabase
-        .from("partnerships")
-        .select("*");
-
-      if (error) {
-        console.error("Error fetching partnerships:", error);
-        setPartnerships([]);
-      } else {
-        setPartnerships(data || []);
-      }
-
-      setLoading(false);
-    };
-
-    fetchPartnerships();
+    setPartnerships([
+      {
+        id: 1,
+        business_name: "BROcode(private.limited)",
+        partner_name: "BROcode",
+        bio: "Digital Marketing Studios",
+        website_url: "https://brocodedigitalmarketing.netlify.app/",
+        logo_url: "/partners/brocode.jpg",
+      },
+    ]);
+    setLoading(false);
   }, []);
+
+  // Autoplay horizontal scroll
+  useEffect(() => {
+    if (partnerships.length <= 1) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const interval = setInterval(() => {
+      if (!isHovering.current) {
+        container.scrollBy({ left: 600, behavior: "smooth" });
+
+        if (
+          container.scrollLeft + container.clientWidth >=
+          container.scrollWidth - 5
+        ) {
+          setTimeout(() => container.scrollTo({ left: 0, behavior: "smooth" }), 350);
+        }
+      }
+    }, AUTOPLAY_MS);
+
+    return () => clearInterval(interval);
+  }, [partnerships]);
+
+  const setCardRef = (el: HTMLDivElement | null, i: number) => {
+    cardRefs.current[i] = el;
+  };
 
   if (loading) {
     return (
-      <section id="partnerships" className="relative py-24 md:py-36 bg-black text-white">
-        <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-300">Loading partnerships...</p>
-        </div>
+      <section className="py-24 bg-black text-white text-center">
+        <p className="text-gray-300">Loading partnerships...</p>
       </section>
     );
   }
 
   return (
-    <section id="partnerships" className="relative py-24 md:py-36 bg-black text-white">
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(600px 320px at 50% 50%, rgba(255,140,0,0.06), transparent 12%)",
-        }}
-      />
-
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/95 to-black/90 backdrop-blur-sm" />
+    <section
+      id="partnerships"
+      className="relative py-24 md:py-36 bg-black text-white overflow-hidden"
+    >
+      {/* Background Glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,140,0,0.08),transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black to-black/90 pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
+        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-heading font-bold mb-4">
-            Our{" "}
-            <span className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
-              Partnerships
-            </span>
-          </h2>
+          <div className="text-center mb-3">
+            <h2 className="text-3xl md:text-5xl font-heading font-bold mb-4">
+              Our{" "}
+              <span className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                Partnerships
+              </span>
+            </h2>
+          </div>
 
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto mt-3">
             Trusted partners powering our success
           </p>
         </motion.div>
 
-        {partnerships.length === 0 ? (
-          <div className="text-center text-gray-300">No partnerships available yet.</div>
-        ) : (
-          <div className="relative flex items-center justify-center min-h-[400px]">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-radial from-orange-400/20 to-transparent blur-xl" />
-            </div>
+        {/* Hint */}
+        {partnerships.length > 1 && (
+          <p className="text-sm text-gray-500 mb-4">
+            Explore partnerships — drag or use arrows
+          </p>
+        )}
 
-            {partnerships.map((p, index) => {
-              const angle = (index / partnerships.length) * 360;
-              const radius = 180;
-
-              return (
+        {/* DESKTOP VIEW - Unchanged */}
+        <div className="hidden md:block">
+          {partnerships.length === 0 ? (
+            <p className="text-center text-gray-300">No partnerships found.</p>
+          ) : (
+            <div
+              ref={containerRef}
+              className={`no-scrollbar overflow-x-auto flex gap-8 py-6 snap-x snap-mandatory scroll-smooth ${
+                partnerships.length === 1 ? "justify-center" : ""
+              }`}
+              onMouseEnter={() => (isHovering.current = true)}
+              onMouseLeave={() => (isHovering.current = false)}
+            >
+              {partnerships.map((partner, i) => (
                 <motion.div
-                  key={p.id || index}
-                  className="absolute"
-                  initial={{
-                    x: Math.cos((angle * Math.PI) / 180) * radius,
-                    y: Math.sin((angle * Math.PI) / 180) * radius,
-                  }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  style={{
-                    transformOrigin: `${
-                      -Math.cos((angle * Math.PI) / 180) * radius
-                    }px ${
-                      -Math.sin((angle * Math.PI) / 180) * radius
-                    }px`,
-                  }}
+                  key={partner.id || i}
+                  ref={(el) => setCardRef(el, i)}
+                  className="
+                    snap-center shrink-0 
+                    w-full max-w-[900px] 
+                    bg-black/40 
+                    rounded-3xl 
+                    border border-orange-400/10 
+                    p-6 md:p-10 
+                    shadow-[0_8px_40px_rgba(0,0,0,0.4)]
+                    flex flex-col md:flex-row 
+                    gap-6 md:gap-10 
+                    items-center
+                  "
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
                 >
+                  {/* Logo Block */}
                   <motion.div
-                    className="relative group"
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="relative w-[200px] h-[200px] md:w-[260px] md:h-[260px] flex items-center justify-center shrink-0"
+                    whileHover={{ scale: 1.04 }}
                   >
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-400/30 to-yellow-400/30 blur-md scale-110 group-hover:scale-125 transition-transform duration-300" />
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/10 to-yellow-500/10 blur-xl" />
 
-                    <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-orange-400/50 bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-[0_0_30px_rgba(255,140,0,0.3)] group-hover:shadow-[0_0_50px_rgba(255,140,0,0.6)] transition-shadow duration-300">
-                      {p.logo_url ? (
+                    <div className="relative w-full h-full rounded-2xl border border-orange-400/20 bg-black/50 p-4 shadow-[0_0_30px_rgba(255,150,0,0.15)] flex items-center justify-center">
+                      {partner.logo_url ? (
                         <img
-                          src={p.logo_url}
-                          alt={p.business_name}
-                          className="w-full h-full object-contain p-2"
+                          src={partner.logo_url}
+                          alt={partner.business_name}
+                          className="w-full h-full rounded-xl object-contain"
                         />
                       ) : (
-                        <div className="text-orange-400 text-xs md:text-sm font-bold text-center">
-                          {p.business_name.charAt(0).toUpperCase()}
+                        <div className="w-full h-full rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 text-5xl font-bold">
+                          {partner.business_name.charAt(0)}
                         </div>
                       )}
                     </div>
 
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black/80 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      {p.business_name}
+                    {/* Business Name Badge */}
+                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-400 to-yellow-400 text-black px-3 py-1 rounded-full text-[10px] md:text-xs font-bold shadow-xl whitespace-nowrap z-20">
+                      {partner.business_name}
                     </div>
                   </motion.div>
+
+                  {/* Content */}
+                  <div className="flex-1 w-full text-center md:text-left">
+                    <h3 className="text-2xl md:text-3xl font-bold text-orange-400 mb-2 md:mb-3">
+                      {partner.partner_name}
+                    </h3>
+
+                    {partner.bio && (
+                      <p className="text-gray-300 leading-relaxed text-sm md:text-base mb-4 md:mb-6">
+                        {partner.bio}
+                      </p>
+                    )}
+                    
+                    {partner.website_url && (
+                      <a 
+                        href={partner.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block text-orange-300 hover:text-orange-200 underline text-sm mb-4"
+                      >
+                        Visit Website
+                      </a>
+                    )}
+
+                    <div className="flex items-center justify-center md:justify-between mt-2 pt-4 border-t border-white/5">
+                      <div className="hidden md:block" />
+
+                      <div className="text-center md:text-right">
+                        <p className="text-xs text-gray-500">Business</p>
+                        <p className="text-orange-300 font-semibold text-sm">
+                          {partner.business_name}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* MOBILE VIEW - Compact Autoplay Carousel */}
+        <div className="md:hidden max-w-sm mx-auto">
+          <Carousel
+            opts={{
+              align: "center",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 3000,
+                stopOnInteraction: false,
+                stopOnMouseEnter: true,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent>
+              {partnerships.map((partner) => (
+                <CarouselItem key={partner.id} className="basis-full">
+                  <div className="relative bg-zinc-900/60 border border-orange-400/10 rounded-2xl p-6 flex flex-col items-center text-center backdrop-blur-xl shadow-lg mx-2">
+                    
+                    {/* Compact Logo */}
+                    <div className="relative w-24 h-24 mb-6">
+                      <div className="absolute inset-0 rounded-xl bg-orange-500/10 blur-lg" />
+                      <div className="relative w-full h-full rounded-xl border border-orange-400/20 bg-black/50 p-2 flex items-center justify-center overflow-hidden">
+                        {partner.logo_url ? (
+                          <img
+                            src={partner.logo_url}
+                            alt={partner.business_name}
+                            className="w-full h-full object-contain rounded-lg"
+                          />
+                        ) : (
+                          <span className="text-3xl font-bold text-orange-400">{partner.business_name.charAt(0)}</span>
+                        )}
+                      </div>
+                      {/* Badge */}
+                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-400 to-yellow-400 text-black px-2 py-0.5 rounded-full text-[8px] font-bold whitespace-nowrap shadow-md z-10">
+                        {partner.business_name}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <h3 className="text-lg font-bold text-orange-400 mb-2">
+                      {partner.partner_name}
+                    </h3>
+
+                    <p className="text-sm text-gray-300 leading-snug mb-4 line-clamp-3">
+                      {partner.bio}
+                    </p>
+
+                    {partner.website_url && (
+                      <a 
+                        href={partner.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-orange-500/10 text-orange-400 text-xs font-semibold hover:bg-orange-500/20 transition-colors"
+                      >
+                        Visit Website
+                      </a>
+                    )}
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+
+        {/* Center Hint - Only show on desktop if relevant */}
+        {partnerships.length > 1 && (
+          <p className="hidden md:block text-center text-sm text-gray-500 mt-8">
+            Drag horizontally or use arrow keys to explore partnerships.
+          </p>
         )}
       </div>
     </section>

@@ -1,24 +1,22 @@
-# TODO List for Partnerships Section Integration
+# TODO: Update Testimonials with Bio and Rating
 
-## Completed Tasks
-- [x] Create Supabase migration for pricing_packages table
-- [x] Add PricingPackage type to Admin.tsx
-- [x] Add pricing state management in Admin.tsx
-- [x] Add fetch functions for pricing packages
-- [x] Add CRUD handlers for pricing
-- [x] Add Pricing Packages card in Admin.tsx with form and list
-- [x] Update counts in Admin.tsx to include pricing
-- [x] Update Pricing.tsx to fetch and display dynamic packages
-- [x] Remove fallback defaults from Pricing component
-- [x] Add Team section after Pricing in Index.tsx
+## Database Migration
+- [x] Create Supabase migration to add `bio` (text, nullable) and `rating` (integer, nullable) to `clients` table
+- [ ] Run Supabase migration to update database schema (requires Supabase CLI setup)
 
-## Pending Tasks
-- [x] Create Supabase migration for partnerships table (similar to team_members but for logos)
-- [x] Create src/components/sections/Partnerships.tsx with orbit animation logo carousel and glowing highlights
-- [x] Add Partnerships section to Index.tsx (after Team)
-- [x] Update TODO.md with new tasks
-- [ ] Run the migration to create the partnerships table in database (Supabase local not running due to Docker issues)
-- [ ] Test CRUD operations in Admin dashboard for partnerships
-- [ ] Verify Partnerships section displays dynamic data with orbit animation
-- [ ] Test Team section integration
-- [ ] Fix any TypeScript errors in Team.tsx and Admin.tsx
+## Admin.tsx Updates
+- [ ] Update Testimonial type to include bio and rating as nullable fields
+- [ ] Modify `handleTestimonialSubmit` to include bio and rating in DB operations
+- [ ] Update `fetchTestimonials` to map bio and rating from database
+- [ ] Change rating input from number field to star selector component
+
+## Testimonials.tsx Updates
+- [ ] Modify fetchTestimonials mapping to include bio and rating from DB
+- [ ] Add conditional display for bio below client name
+- [ ] Add rating display as stars (e.g., ★★★☆☆) above feedback
+
+## Testing & Verification
+- [ ] Run Supabase migration to update schema
+- [ ] Test admin form: Add/edit testimonials with bio and rating, verify star selector
+- [ ] Test testimonials display: Bio shows conditionally, rating as stars
+- [ ] Verify data persistence and real-time updates
